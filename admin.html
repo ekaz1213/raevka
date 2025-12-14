@@ -69,33 +69,37 @@ function renderNewsList() {
     
     container.innerHTML = `
         <h3>Текущие новости (${data.news.length})</h3>
-        ${data.news.map((news, index) => `
-            <div class="admin-item" data-id="${news.id}">
-                <img src="${news.image}" alt="${news.title}" 
-                     class="admin-thumb" loading="lazy">
-                <div class="admin-item-content">
-                    <div class="admin-item-title minecraft-text">
-                        ${parseMinecraftColors(news.title)}
+        ${data.news.map((news, index) => {
+            // Удаляем теги для отображения в превью
+            const cleanContent = news.content.replace(/&[0-9a-fk-or]/gi, '');
+            return `
+                <div class="admin-item" data-id="${news.id}">
+                    <img src="${news.image}" alt="${news.title.replace(/&[0-9a-fk-or]/gi, '')}" 
+                         class="admin-thumb" loading="lazy">
+                    <div class="admin-item-content">
+                        <div class="admin-item-title minecraft-text">
+                            ${parseMinecraftColors(news.title)}
+                        </div>
+                        <div class="admin-item-preview">
+                            ${cleanContent.substring(0, 100)}${cleanContent.length > 100 ? '...' : ''}
+                        </div>
+                        <div class="admin-item-meta">
+                            <span><i class="fas fa-calendar"></i> ${news.date}</span>
+                            ${news.tags && news.tags.length ? `
+                                <span style="margin-left: 15px;">
+                                    <i class="fas fa-tags"></i> ${news.tags.join(', ')}
+                                </span>
+                            ` : ''}
+                        </div>
                     </div>
-                    <div class="admin-item-preview">
-                        ${news.content.substring(0, 100)}...
-                    </div>
-                    <div class="admin-item-meta">
-                        <span><i class="fas fa-calendar"></i> ${news.date}</span>
-                        ${news.tags ? `
-                            <span style="margin-left: 15px;">
-                                <i class="fas fa-tags"></i> ${news.tags.join(', ')}
-                            </span>
-                        ` : ''}
+                    <div class="admin-item-actions">
+                        <button onclick="deleteNews(${index})" class="btn btn-danger btn-small">
+                            <i class="fas fa-trash"></i> Удалить
+                        </button>
                     </div>
                 </div>
-                <div class="admin-item-actions">
-                    <button onclick="deleteNews(${index})" class="btn btn-danger btn-small">
-                        <i class="fas fa-trash"></i> Удалить
-                    </button>
-                </div>
-            </div>
-        `).join('')}
+            `;
+        }).join('')}
     `;
 }
 
@@ -176,6 +180,13 @@ document.getElementById('add-news-form')?.addEventListener('submit', function(e)
         renderAdminLists();
         this.reset();
         updatePreview();
+        
+        // Устанавливаем сегодняшнюю дату по умолчанию
+        const dateInput = document.getElementById('news-date');
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
         
         // Показываем уведомление
         showNotification('Новость успешно добавлена!', 'success');
@@ -280,9 +291,9 @@ function checkAuth() {
     }
 }
 
-// Показ уведомлений
+// Отображение уведомлений
 function showNotification(message, type = 'info') {
-    // Создаем элемент уведомления
+    // Создаём элемент уведомления
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.innerHTML = `
