@@ -1,370 +1,1504 @@
-// Данные
-let data = JSON.parse(localStorage.getItem('serverData')) || {
-    news: [],
-    photos: [],
-    updates: []
-};
-
-// Парсер Minecraft цветов (такой же как в script.js)
-function parseMinecraftColors(text) {
-    if (!text) return '';
-    
-    const formatting = {
-        '&l': '<strong>', '&o': '<em>', '&n': '<u>',
-        '&r': '</strong></em></u>'
-    };
-    
-    const colors = {
-        '&0': 'color-black',        '&1': 'color-dark-blue',
-        '&2': 'color-dark-green',   '&3': 'color-dark-aqua',
-        '&4': 'color-dark-red',     '&5': 'color-dark-purple',
-        '&6': 'color-gold',         '&7': 'color-gray',
-        '&8': 'color-dark-gray',    '&9': 'color-blue',
-        '&a': 'color-green',        '&b': 'color-aqua',
-        '&c': 'color-red',          '&d': 'color-pink',
-        '&e': 'color-yellow',       '&f': 'color-white'
-    };
-    
-    let html = text;
-    
-    Object.entries(colors).forEach(([code, className]) => {
-        const regex = new RegExp(code, 'g');
-        html = html.replace(regex, `<span class="${className}">`);
-    });
-    
-    Object.entries(formatting).forEach(([code, tag]) => {
-        const regex = new RegExp(code, 'g');
-        html = html.replace(regex, tag);
-    });
-    
-    html += '</span></strong></em></u>';
-    html = html.replace(/<\/span><\/strong><\/em><\/u>$/g, '');
-    
-    return html;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-// Обновление предварительного просмотра
-function updatePreview() {
-    const title = document.getElementById('news-title')?.value || '';
-    const content = document.getElementById('news-content')?.value || '';
-    
-    const previewElement = document.getElementById('news-preview');
-    if (previewElement) {
-        const previewText = `${title}<br>${content}`;
-        previewElement.innerHTML = parseMinecraftColors(previewText);
+:root {
+    --primary-color: #2ecc71;
+    --secondary-color: #3498db;
+    --dark-color: #2c3e50;
+    --darker-color: #1a252f;
+    --light-color: #ecf0f1;
+    --accent-color: #e74c3c;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --danger-color: #e74c3c;
+    --minecraft-green: #55FF55;
+    --minecraft-red: #FF5555;
+    --minecraft-blue: #5555FF;
+    --minecraft-yellow: #FFFF55;
+    --minecraft-aqua: #55FFFF;
+    --minecraft-pink: #FF55FF;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+.minecraft-text {
+    font-family: 'Minecraftia', monospace;
+}
+
+.highlight {
+    color: var(--primary-color);
+    text-shadow: 0 0 10px rgba(46, 204, 113, 0.3);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Хедер */
+.header {
+    background: rgba(44, 62, 80, 0.95);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-bottom: 3px solid var(--primary-color);
+}
+
+.header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+}
+
+.logo h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.logo-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    margin-top: 2px;
+}
+
+.nav {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.nav a {
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+.nav a:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateY(-2px);
+}
+
+.nav a i {
+    font-size: 1.1rem;
+}
+
+.admin-btn {
+    background: linear-gradient(135deg, var(--accent-color), #c0392b);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.admin-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+/* Герой-секция */
+.hero {
+    background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.9)), 
+                url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1900&q=80');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: white;
+    padding: 100px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        rgba(46, 204, 113, 0.1) 0%,
+        rgba(52, 152, 219, 0.1) 100%);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero h2 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    background: linear-gradient(135deg, #fff, var(--primary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+    from { text-shadow: 0 0 10px rgba(46, 204, 113, 0.5); }
+    to { text-shadow: 0 0 20px rgba(46, 204, 113, 0.8), 0 0 30px rgba(46, 204, 113, 0.6); }
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+.server-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.stat i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+}
+
+.stat h3 {
+    font-size: 2.2rem;
+    margin-bottom: 5px;
+}
+
+.stat p {
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.server-connect {
+    background: rgba(0,0,0,0.6);
+    border-radius: 15px;
+    padding: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    border: 2px solid var(--primary-color);
+}
+
+.ip-address {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.ip-address i {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+}
+
+.label {
+    opacity: 0.8;
+    font-size: 0.9rem;
+}
+
+.ip {
+    background: rgba(0,0,0,0.4);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.online-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.status-indicator.online {
+    background: var(--success-color);
+    box-shadow: 0 0 10px var(--success-color);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+/* Секции */
+.section {
+    padding: 100px 0;
+    background: white;
+}
+
+.dark-section {
+    background: var(--dark-color);
+    color: white;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.section-header h2 {
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.section-header h2 i {
+    color: var(--primary-color);
+}
+
+.section-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Новости */
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+}
+
+.news-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border: 1px solid #eee;
+}
+
+.news-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.news-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.news-card:hover .news-image {
+    transform: scale(1.05);
+}
+
+.news-content {
+    padding: 25px;
+}
+
+.news-date {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+}
+
+.news-content h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    color: var(--dark-color);
+}
+
+.news-text {
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.7;
+}
+
+.news-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.news-tag {
+    background: #f0f0f0;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+/* Стили для цветного текста Minecraft */
+.color-black { color: #000000 !important; }
+.color-dark-blue { color: #0000AA !important; }
+.color-dark-green { color: #00AA00 !important; }
+.color-dark-aqua { color: #00AAAA !important; }
+.color-dark-red { color: #AA0000 !important; }
+.color-dark-purple { color: #AA00AA !important; }
+.color-gold { color: #FFAA00 !important; }
+.color-gray { color: #AAAAAA !important; }
+.color-dark-gray { color: #555555 !important; }
+.color-blue { color: #5555FF !important; }
+.color-green { color: var(--minecraft-green) !important; }
+.color-aqua { color: var(--minecraft-aqua) !important; }
+.color-red { color: var(--minecraft-red) !important; }
+.color-pink { color: var(--minecraft-pink) !important; }
+.color-yellow { color: var(--minecraft-yellow) !important; }
+.color-white { color: #FFFFFF !important; }
+
+.minecraft-text .bold { font-weight: 700 !important; }
+.minecraft-text .italic { font-style: italic !important; }
+.minecraft-text .underline { text-decoration: underline !important; }
+
+/* Галерея */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.gallery-item {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    height: 250px;
+    cursor: pointer;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.3s ease;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.1);
+}
+
+.gallery-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+    padding: 20px;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover .gallery-overlay {
+    transform: translateY(0);
+}
+
+/* Обновления */
+.updates-timeline {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.updates-timeline::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary-color);
+    transform: translateX(-50%);
+}
+
+.update-item {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    border-left: 5px solid var(--primary-color);
+    position: relative;
+}
+
+.update-item:nth-child(even) {
+    margin-left: 50%;
+}
+
+.update-item:nth-child(odd) {
+    margin-right: 50%;
+}
+
+.update-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.update-date {
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.update-title {
+    font-size: 1.4rem;
+    color: var(--dark-color);
+    margin-bottom: 10px;
+}
+
+.update-description {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.update-progress {
+    background: #f0f0f0;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    text-align: right;
+}
+
+/* О сервере */
+.about-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    margin-bottom: 60px;
+}
+
+.about-text h3 {
+    font-size: 2rem;
+    margin-bottom: 25px;
+    color: var(--primary-color);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.feature-card {
+    background: rgba(255,255,255,0.1);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255,255,255,0.15);
+}
+
+.feature-card i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.feature-card h4 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
+
+.about-image {
+    position: relative;
+}
+
+.image-frame {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    border: 5px solid white;
+}
+
+.image-frame img {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+}
+
+.image-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 15px;
+    text-align: center;
+}
+
+.history-timeline {
+    background: rgba(0,0,0,0.2);
+    border-radius: 15px;
+    padding: 40px;
+}
+
+.history-timeline h3 {
+    font-size: 1.8rem;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.timeline {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 4px;
+    background: var(--primary-color);
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+.timeline-item {
+    position: relative;
+    z-index: 2;
+    background: var(--darker-color);
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    width: 22%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.timeline-item.current {
+    background: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.timeline-date {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.timeline-item.current .timeline-date {
+    color: white;
+}
+
+.timeline-content h4 {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+/* Футер */
+.footer {
+    background: var(--darker-color);
+    color: white;
+    padding: 60px 0 30px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 50px;
+    margin-bottom: 50px;
+}
+
+.footer-section .logo {
+    margin-bottom: 20px;
+}
+
+.footer-text {
+    opacity: 0.8;
+    line-height: 1.8;
+}
+
+.footer-section h4 {
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+    color: var(--primary-color);
+}
+
+.footer-links {
+    list-style: none;
+}
+
+.footer-links li {
+    margin-bottom: 12px;
+}
+
+.footer-links a {
+    color: white;
+    text-decoration: none;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-links a:hover {
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+.social-links {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.social-link:hover {
+    transform: translateX(5px);
+    background: rgba(255,255,255,0.2);
+}
+
+.social-link.discord { border-left: 4px solid #7289da; }
+.social-link.vk { border-left: 4px solid #4c75a3; }
+.social-link.youtube { border-left: 4px solid #ff0000; }
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 30px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+.version {
+    margin-top: 10px;
+    font-size: 1rem;
+}
+
+/* Модальное окно */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: white;
+    margin: 10% auto;
+    padding: 40px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+    animation: modalSlide 0.3s ease;
+}
+
+@keyframes modalSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-// Рендеринг списков
-function renderAdminLists() {
-    renderNewsList();
-    renderPhotosList();
-    renderUpdatesList();
+.close {
+    position: absolute;
+    right: 25px;
+    top: 20px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #aaa;
+    transition: color 0.3s;
 }
 
-// Рендеринг списка новостей
-function renderNewsList() {
-    const container = document.getElementById('news-list');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <h3>Текущие новости (${data.news.length})</h3>
-        ${data.news.map((news, index) => {
-            // Удаляем теги для отображения в превью
-            const cleanContent = news.content.replace(/&[0-9a-fk-or]/gi, '');
-            return `
-                <div class="admin-item" data-id="${news.id}">
-                    <img src="${news.image}" alt="${news.title.replace(/&[0-9a-fk-or]/gi, '')}" 
-                         class="admin-thumb" loading="lazy">
-                    <div class="admin-item-content">
-                        <div class="admin-item-title minecraft-text">
-                            ${parseMinecraftColors(news.title)}
-                        </div>
-                        <div class="admin-item-preview">
-                            ${cleanContent.substring(0, 100)}${cleanContent.length > 100 ? '...' : ''}
-                        </div>
-                        <div class="admin-item-meta">
-                            <span><i class="fas fa-calendar"></i> ${news.date}</span>
-                            ${news.tags && news.tags.length ? `
-                                <span style="margin-left: 15px;">
-                                    <i class="fas fa-tags"></i> ${news.tags.join(', ')}
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>
-                    <div class="admin-item-actions">
-                        <button onclick="deleteNews(${index})" class="btn btn-danger btn-small">
-                            <i class="fas fa-trash"></i> Удалить
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('')}
-    `;
+.close:hover {
+    color: var(--danger-color);
 }
 
-// Рендеринг списка фото
-function renderPhotosList() {
-    const container = document.getElementById('photos-list');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <h3>Текущие фото (${data.photos.length})</h3>
-        <div class="photos-grid">
-            ${data.photos.map((photo, index) => `
-                <div class="admin-photo-item">
-                    <img src="${photo.url}" alt="${photo.title}" 
-                         class="admin-photo" loading="lazy">
-                    <div class="admin-photo-info">
-                        <div class="admin-photo-title">${photo.title}</div>
-                        <button onclick="deletePhoto(${index})" 
-                                class="btn btn-danger btn-small">
-                            <i class="fas fa-trash"></i> Удалить
-                        </button>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
+.modal-subtitle {
+    color: #666;
+    margin-bottom: 30px;
+    text-align: center;
 }
 
-// Рендеринг списка обновлений
-function renderUpdatesList() {
-    const container = document.getElementById('updates-list');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <h3>Текущие обновления (${data.updates.length})</h3>
-        ${data.updates.map((update, index) => `
-            <div class="admin-item">
-                <div class="admin-item-content">
-                    <div class="admin-item-title">${update.title}</div>
-                    <p>${update.description}</p>
-                    <div class="admin-item-meta">
-                        <span><i class="fas fa-clock"></i> ${update.eta}</span>
-                        <span style="margin-left: 15px;">
-                            <i class="fas fa-chart-line"></i> Прогресс: ${update.progress || 0}%
-                        </span>
-                    </div>
-                </div>
-                <div class="admin-item-actions">
-                    <button onclick="deleteUpdate(${index})" 
-                            class="btn btn-danger btn-small">
-                        <i class="fas fa-trash"></i> Удалить
-                    </button>
-                </div>
-            </div>
-        `).join('')}
-    `;
+.form-group {
+    margin-bottom: 25px;
 }
 
-// Добавление новости
-document.getElementById('add-news-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const news = {
-        id: Date.now(),
-        title: document.getElementById('news-title').value,
-        content: document.getElementById('news-content').value,
-        image: document.getElementById('news-image').value,
-        date: document.getElementById('news-date').value,
-        tags: document.getElementById('news-tags').value
-            .split(',')
-            .map(tag => tag.trim())
-            .filter(tag => tag)
-    };
-    
-    data.news.unshift(news);
-    
-    if (saveData()) {
-        renderAdminLists();
-        this.reset();
-        updatePreview();
-        
-        // Устанавливаем сегодняшнюю дату по умолчанию
-        const dateInput = document.getElementById('news-date');
-        if (dateInput) {
-            const today = new Date().toISOString().split('T')[0];
-            dateInput.value = today;
-        }
-        
-        // Показываем уведомление
-        showNotification('Новость успешно добавлена!', 'success');
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--dark-color);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-info {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid var(--warning-color);
+}
+
+.modal-info h4 {
+    color: var(--dark-color);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-codes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.color-code {
+    padding: 5px 10px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+/* Стили для админ-панели */
+.admin-panel {
+    padding: 40px 0;
+}
+
+.color-guide {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.color-badge {
+    background: rgba(255,255,255,0.1);
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.formatting-guide {
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.formatting-guide span {
+    font-family: monospace;
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+}
+
+.admin-section {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.admin-form {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    border: 1px solid #e9ecef;
+}
+
+.admin-form h3 {
+    color: var(--dark-color);
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.preview-box {
+    margin: 20px 0;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    border: 2px dashed #ddd;
+}
+
+.preview-box label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.color-preview {
+    min-height: 60px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    margin-top: 10px;
+    border: 1px solid #e9ecef;
+    font-family: 'Minecraftia', monospace;
+    line-height: 1.5;
+}
+
+.admin-list h3 {
+    margin-bottom: 25px;
+    color: var(--dark-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+    font-size: 1.3rem;
+}
+
+.admin-item {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.3s;
+}
+
+.admin-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.admin-thumb {
+    width: 120px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.admin-item-content {
+    flex: 1;
+}
+
+.admin-item-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--dark-color);
+}
+
+.admin-item-preview {
+    color: #7f8c8d;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+.admin-item-meta {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.admin-item-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.admin-item-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s;
+}
+
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.admin-photo-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+    transition: transform 0.3s;
+}
+
+.admin-photo-item:hover {
+    transform: translateY(-5px);
+}
+
+.admin-photo {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.admin-photo-info {
+    padding: 15px;
+}
+
+.admin-photo-title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--dark-color);
+}
+
+/* Уведомления */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+}
+
+.notification-success {
+    background: var(--success-color);
+    color: white;
+}
+
+.notification-error {
+    background: var(--danger-color);
+    color: white;
+}
+
+.notification-info {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.notification-warning {
+    background: var(--warning-color);
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
     }
-});
-
-// Добавление фото
-document.getElementById('add-photo-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const photo = {
-        id: Date.now(),
-        title: document.getElementById('photo-title').value,
-        url: document.getElementById('photo-url').value
-    };
-    
-    data.photos.unshift(photo);
-    
-    if (saveData()) {
-        renderAdminLists();
-        this.reset();
-        showNotification('Фото успешно добавлено!', 'success');
-    }
-});
-
-// Добавление обновления
-document.getElementById('add-update-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const update = {
-        id: Date.now(),
-        title: document.getElementById('update-title').value,
-        description: document.getElementById('update-desc').value,
-        eta: document.getElementById('update-eta').value,
-        progress: parseInt(document.getElementById('update-progress').value) || 0
-    };
-    
-    data.updates.unshift(update);
-    
-    if (saveData()) {
-        renderAdminLists();
-        this.reset();
-        showNotification('Обновление успешно добавлено!', 'success');
-    }
-});
-
-// Удаление новости
-function deleteNews(index) {
-    if (confirm('Вы уверены, что хотите удалить эту новость?')) {
-        data.news.splice(index, 1);
-        if (saveData()) {
-            renderAdminLists();
-            showNotification('Новость удалена!', 'info');
-        }
+    to {
+        transform: translateX(0);
+        opacity: 1;
     }
 }
 
-// Удаление фото
-function deletePhoto(index) {
-    if (confirm('Вы уверены, что хотите удалить это фото?')) {
-        data.photos.splice(index, 1);
-        if (saveData()) {
-            renderAdminLists();
-            showNotification('Фото удалено!', 'info');
-        }
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
     }
 }
 
-// Удаление обновления
-function deleteUpdate(index) {
-    if (confirm('Вы уверены, что хотите удалить это обновление?')) {
-        data.updates.splice(index, 1);
-        if (saveData()) {
-            renderAdminLists();
-            showNotification('Обновление удалено!', 'info');
-        }
+/* Анимации для элементов при прокрутке */
+.animate-in {
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-// Сохранение данных
-function saveData() {
-    try {
-        localStorage.setItem('serverData', JSON.stringify(data));
-        return true;
-    } catch (e) {
-        console.error('Ошибка сохранения данных:', e);
-        showNotification('Ошибка сохранения данных!', 'error');
-        return false;
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .container {
+        padding: 0 40px;
     }
 }
 
-// Выход из админ-панели
-function logout() {
-    localStorage.removeItem('adminLoggedIn');
-    window.location.href = 'index.html';
-}
-
-// Проверка авторизации
-function checkAuth() {
-    if (!localStorage.getItem('adminLoggedIn')) {
-        window.location.href = 'index.html';
+@media (max-width: 992px) {
+    .header .container {
+        flex-direction: column;
+        gap: 20px;
     }
-}
-
-// Отображение уведомлений
-function showNotification(message, type = 'info') {
-    // Создаём элемент уведомления
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        ${message}
-    `;
     
-    // Стили для уведомления
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
-        color: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
+    .nav {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .hero h2 {
+        font-size: 2.8rem;
+    }
+    
+    .about-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .timeline {
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    .timeline::before {
+        display: none;
+    }
+    
+    .timeline-item {
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 20px;
+    }
+    
+    .hero h2 {
+        font-size: 2.2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .server-stats {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+    
+    .server-connect {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .news-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    
+    .update-item {
+        margin: 0 0 30px 0 !important;
+    }
+    
+    .updates-timeline::before {
+        left: 30px;
+    }
+    
+    .update-item {
+        margin-left: 60px !important;
+    }
+    
+    .section {
+        padding: 60px 0;
+    }
+    
+    .section-header h2 {
+        font-size: 2.2rem;
+    }
+    
+    .admin-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .admin-item-actions {
+        justify-content: center;
+    }
+    
+    .admin-thumb {
+        width: 100%;
+        height: 150px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .color-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .hero h2 {
+        font-size: 1.8rem;
+    }
+    
+    .nav {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .nav a {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .admin-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .server-stats {
+        gap: 20px;
+    }
+    
+    .stat {
+        flex-direction: column;
+        text-align: center;
         gap: 10px;
-        animation: slideIn 0.3s ease;
-    `;
+    }
     
-    // Анимация
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
+    .modal-content {
+        padding: 20px;
+        margin: 20% auto;
+    }
     
-    document.body.appendChild(notification);
-    
-    // Автоматическое удаление через 3 секунды
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
+    .photos-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-// Слушатели для предварительного просмотра
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
-    renderAdminLists();
-    
-    // Обновление предварительного просмотра при вводе
-    const titleInput = document.getElementById('news-title');
-    const contentInput = document.getElementById('news-content');
-    
-    if (titleInput && contentInput) {
-        titleInput.addEventListener('input', updatePreview);
-        contentInput.addEventListener('input', updatePreview);
-    }
-    
-    // Устанавливаем сегодняшнюю дату по умолчанию для новости
-    const dateInput = document.getElementById('news-date');
-    if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
-        dateInput.min = today;
-    }
-    
-    // Обновляем предварительный просмотр при загрузке
-    updatePreview();
-});
+/* Специальные стили для Minecraft текста */
+.minecraft-chat {
+    background: rgba(0,0,0,0.7);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    border-left: 5px solid var(--primary-color);
+}
+
+.minecraft-chat-text {
+    font-family: 'Minecraftia', monospace;
+    line-height: 1.5;
+    color: white;
+}
+
+/* Загрузка */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Полоса прокрутки */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #27ae60;
+}
+
+/* Выделение текста */
+::selection {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Утилиты */
+.text-center {
+    text-align: center;
+}
+
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mt-3 { margin-top: 3rem; }
+.mb-1 { margin-bottom: 1rem; }
+.mb-2 { margin-bottom: 2rem; }
+.mb-3 { margin-bottom: 3rem; }
+.p-1 { padding: 1rem; }
+.p-2 { padding: 2rem; }
+.p-3 { padding: 3rem; }
+
+.d-flex {
+    display: flex;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.justify-center {
+    justify-content: center;
+}
+
+.flex-column {
+    flex-direction: column;
+}
+
+.w-100 {
+    width: 100%;
+}
+
+.h-100 {
+    height: 100%;
+}
