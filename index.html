@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Сервер "Раевка" | Поселок с историей</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Minecraftia&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="https://static.wikia.nocookie.net/minecraft/images/e/e6/GrassNew.png">
+</head>
+<body>
+    <!-- Хедер -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-mountain"></i>
+                <div>
+                    <h1>Сервер "Раевка"</h1>
+                    <p class="logo-subtitle">Поселок с историей</p>
+                </div>
+            </div>
+            <nav class="nav">
+                <a href="#news"><i class="fas fa-newspaper"></i> Новости</a>
+                <a href="#gallery"><i class="fas fa-images"></i> Фото</a>
+                <a href="#updates"><i class="fas fa-sync-alt"></i> Обновления</a>
+                <a href="#about"><i class="fas fa-info-circle"></i> О нас</a>
+                <button class="admin-btn" onclick="openAdminPanel()">
+                    <i class="fas fa-user-shield"></i> Админ
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Герой-секция -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h2 class="minecraft-text">Добро пожаловать в поселок <span class="highlight">Раевка!</span></h2>
+                <p class="hero-subtitle">Уникальный Minecraft-сервер с дружным сообществом и развитой экономикой</p>
+                
+                <div class="server-stats">
+                    <div class="stat">
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <h3>500+</h3>
+                            <p>Активных жителей</p>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-home"></i>
+                        <div>
+                            <h3>150+</h3>
+                            <p>Построек</p>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-calendar-alt"></i>
+                        <div>
+                            <h3>24/7</h3>
+                            <p>Работа сервера</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="server-connect">
+                    <div class="ip-address">
+                        <i class="fas fa-server"></i>
+                        <div>
+                            <span class="label">IP адрес:</span>
+                            <code class="ip">play.raevka-minecraft.ru</code>
+                        </div>
+                    </div>
+                    <div class="online-status">
+                        <div class="status-indicator online"></div>
+                        <span>Сейчас онлайн: <strong id="online-count">47</strong>/100</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Новости -->
+    <section id="news" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2><i class="fas fa-newspaper"></i> Последние новости</h2>
+                <p class="section-subtitle">Все важные события нашего поселка</p>
+            </div>
+            <div class="news-grid" id="news-container">
+                <!-- Новости загружаются через JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Фотогалерея -->
+    <section id="gallery" class="section dark-section">
+        <div class="container">
+            <div class="section-header">
+                <h2><i class="fas fa-camera"></i> Фотогалерея сервера</h2>
+                <p class="section-subtitle">Посмотрите на красоты нашего поселка</p>
+            </div>
+            <div class="gallery-grid" id="gallery-container">
+                <!-- Фото загружаются через JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Обновления -->
+    <section id="updates" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2><i class="fas fa-sync-alt"></i> Ближайшие обновления</h2>
+                <p class="section-subtitle">Планы развития сервера</p>
+            </div>
+            <div class="updates-timeline" id="updates-container">
+                <!-- Обновления загружаются через JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- О сервере -->
+    <section id="about" class="section dark-section">
+        <div class="container">
+            <div class="section-header">
+                <h2><i class="fas fa-info-circle"></i> О нашем поселке</h2>
+                <p class="section-subtitle">Узнайте больше о жизни в Раевке</p>
+            </div>
+            
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Раевка — больше чем сервер, это дом!</h3>
+                    <p>Основанный в 2022 году, наш поселок вырос из небольшой деревушки в процветающий город с развитой инфраструктурой, экономикой и активным сообществом.</p>
+                    
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <i class="fas fa-handshake"></i>
+                            <h4>Дружное сообщество</h4>
+                            <p>Мы гордимся атмосферой взаимопомощи и уважения между игроками</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-chart-line"></i>
+                            <h4>Экономическая система</h4>
+                            <p>Реальная валюта, бизнесы, налоги и банковская система</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-gem"></i>
+                            <h4>Уникальные ивенты</h4>
+                            <p>Регулярные конкурсы, праздники и турниры с призами</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-shield-alt"></i>
+                            <h4>Защита от гриферов</h4>
+                            <p>Система защиты территории и активная модерация</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="about-image">
+                    <div class="image-frame">
+                        <img src="https://images.unsplash.com/photo-1531315630201-bb15abeb1653?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" alt="Карта Раевки">
+                        <div class="image-caption">Карта центральной части Раевки</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="history-timeline">
+                <h3>История развития:</h3>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-date">Янв 2022</div>
+                        <div class="timeline-content">
+                            <h4>Основание поселка</h4>
+                            <p>Первые 10 жителей начали строительство</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">Мар 2022</div>
+                        <div class="timeline-content">
+                            <h4>Введение экономики</h4>
+                            <p>Запущена система "Раевских рублей"</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-date">Дек 2022</div>
+                        <div class="timeline-content">
+                            <h4>500 жителей!</h4>
+                            <p>Преодолена отметка в 500 активных игроков</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item current">
+                        <div class="timeline-date">Сейчас</div>
+                        <div class="timeline-content">
+                            <h4>Эра развития</h4>
+                            <p>Постоянные обновления и улучшения</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Футер -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="logo">
+                        <i class="fas fa-mountain"></i>
+                        <div>
+                            <h3>Раевка</h3>
+                            <p>Поселок с историей</p>
+                        </div>
+                    </div>
+                    <p class="footer-text">Самый уютный Minecraft-сервер с душой и традициями</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Быстрые ссылки</h4>
+                    <ul class="footer-links">
+                        <li><a href="#news">Новости</a></li>
+                        <li><a href="#gallery">Галерея</a></li>
+                        <li><a href="#updates">Обновления</a></li>
+                        <li><a href="#about">О нас</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Контакты</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link discord">
+                            <i class="fab fa-discord"></i> Discord
+                        </a>
+                        <a href="#" class="social-link vk">
+                            <i class="fab fa-vk"></i> ВКонтакте
+                        </a>
+                        <a href="#" class="social-link youtube">
+                            <i class="fab fa-youtube"></i> YouTube
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>© 2024 Minecraft Сервер "Раевка". Все права защищены.</p>
+                <p class="version">Текущая версия: <strong class="minecraft-text">3.13 БИЗНЕС ТЕМЫ</strong></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Админ панель -->
+    <div id="admin-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAdminModal()">&times;</span>
+            <h2><i class="fas fa-user-shield"></i> Вход в админ-панель</h2>
+            <p class="modal-subtitle">Для управления контентом сайта</p>
+            
+            <form id="admin-login-form">
+                <div class="form-group">
+                    <label for="admin-password">Пароль администратора:</label>
+                    <input type="password" id="admin-password" placeholder="Введите пароль" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Войти
+                </button>
+            </form>
+            
+            <div class="modal-info">
+                <h4><i class="fas fa-info-circle"></i> Подсказка по цветному тексту:</h4>
+                <p>Используйте коды Minecraft для цветного текста:</p>
+                <div class="color-codes">
+                    <span class="color-code" style="color: #55FF55">&a - Зеленый</span>
+                    <span class="color-code" style="color: #FF5555">&c - Красный</span>
+                    <span class="color-code" style="color: #FFFF55">&e - Желтый</span>
+                    <span class="color-code" style="color: #55FFFF">&b - Голубой</span>
+                    <span class="color-code" style="color: #FF55FF">&d - Розовый</span>
+                    <span class="color-code" style="color: #AAAAAA">&7 - Серый</span>
+                </div>
+                <p><strong>Форматирование:</strong> &l - жирный, &o - курсив, &n - подчеркнутый</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
