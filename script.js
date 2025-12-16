@@ -20,16 +20,6 @@ let data = {
             id: 2,
             url: "https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
             title: "Бизнес-район города"
-        },
-        {
-            id: 3,
-            url: "https://images.unsplash.com/photo-1531315630201-bb15abeb1653?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-            title: "Ночной вид на поселок"
-        },
-        {
-            id: 4,
-            url: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-            title: "Сельскохозяйственные угодья"
         }
     ],
     updates: [
@@ -37,22 +27,8 @@ let data = {
             id: 1,
             title: "Банковская система",
             description: "Внедрение банковских счетов, кредитов и депозитов для игроков",
-            eta: "Апрель 2024",
+            eta: "Апрель 2025",
             progress: 75
-        },
-        {
-            id: 2,
-            title: "Аукцион и биржа",
-            description: "Торговая площадка для покупки и продажи ресурсов и предметов",
-            eta: "Май 2024",
-            progress: 45
-        },
-        {
-            id: 3,
-            title: "Система кланов",
-            description: "Создание кланов, общие территории и клановые войны",
-            eta: "Июнь 2024",
-            progress: 20
         }
     ]
 };
@@ -61,18 +37,16 @@ let data = {
 function parseMinecraftColors(text) {
     if (!text) return '';
     
-    // Сначала сохраняем HTML теги от форматирования
     const formatting = {
         '&l': '<strong>', '&o': '<em>', '&n': '<u>',
         '&r': '</strong></em></u>'
     };
     
-    // Коды цветов Minecraft
     const colors = {
         '&0': 'color-black',        '&1': 'color-dark-blue',
         '&2': 'color-dark-green',   '&3': 'color-dark-aqua',
         '&4': 'color-dark-red',     '&5': 'color-dark-purple',
-        '6': 'color-gold',          '&7': 'color-gray',
+        '&6': 'color-gold',         '&7': 'color-gray',
         '&8': 'color-dark-gray',    '&9': 'color-blue',
         '&a': 'color-green',        '&b': 'color-aqua',
         '&c': 'color-red',          '&d': 'color-pink',
@@ -81,30 +55,20 @@ function parseMinecraftColors(text) {
     
     let html = text;
     
-    // Заменяем цвета
     Object.entries(colors).forEach(([code, className]) => {
         const regex = new RegExp(code, 'g');
         html = html.replace(regex, `<span class="${className}">`);
     });
     
-    // Заменяем форматирование
     Object.entries(formatting).forEach(([code, tag]) => {
         const regex = new RegExp(code, 'g');
         html = html.replace(regex, tag);
     });
     
-    // Закрываем все открытые теги в конце
     html += '</span></strong></em></u>';
-    
-    // Убираем лишние закрывающие теги
     html = html.replace(/<\/span><\/strong><\/em><\/u>$/g, '');
     
     return html;
-}
-
-// Предварительный просмотр цветного текста (для админки)
-function previewMinecraftColors(text) {
-    return parseMinecraftColors(text);
 }
 
 // Загрузка данных из localStorage
@@ -132,7 +96,7 @@ function saveData() {
     }
 }
 
-// Рендеринг новостей с поддержкой цветного текста
+// Рендеринг новостей
 function renderNews() {
     const container = document.getElementById('news-container');
     if (!container) return;
@@ -200,14 +164,12 @@ function updateOnlineStatus() {
     const onlineElement = document.getElementById('online-count');
     if (!onlineElement) return;
     
-    // Имитация изменения онлайн-статуса
     const baseOnline = 47;
     const variation = Math.floor(Math.random() * 10) - 5;
     const currentOnline = Math.max(1, Math.min(100, baseOnline + variation));
     
     onlineElement.textContent = currentOnline;
     
-    // Обновляем каждую минуту
     setTimeout(updateOnlineStatus, 60000);
 }
 
@@ -244,7 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const password = document.getElementById('admin-password').value;
             
-            // Пароль для демонстрации
             if (password === 'admin123') {
                 localStorage.setItem('adminLoggedIn', 'true');
                 window.location.href = 'admin.html';
@@ -259,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData();
 });
 
-// Закрытие модального окна при клике вне его
+// Закрытие модального окна
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('admin-modal');
     if (event.target === modal) {
@@ -267,14 +228,13 @@ window.addEventListener('click', function(event) {
     }
 });
 
-// Закрытие по ESC
 document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closeAdminModal();
     }
 });
 
-// Плавная прокрутка для якорных ссылок
+// Плавная прокрутка
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
         e.preventDefault();
@@ -288,26 +248,5 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 behavior: 'smooth'
             });
         }
-    });
-});
-
-// Анимация при прокрутке
-const observerOptions = {
-    threshold: 0.1,
-    rootMargin: '0px 0px -50px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('animate-in');
-        }
-    });
-}, observerOptions);
-
-// Наблюдаем за элементами при загрузке
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.news-card, .update-item, .feature-card').forEach(el => {
-        observer.observe(el);
     });
 });
