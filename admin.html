@@ -1,370 +1,410 @@
-// Данные
-let data = JSON.parse(localStorage.getItem('serverData')) || {
-    news: [],
-    photos: [],
-    updates: []
-};
-
-// Парсер Minecraft цветов (такой же как в script.js)
-function parseMinecraftColors(text) {
-    if (!text) return '';
-    
-    const formatting = {
-        '&l': '<strong>', '&o': '<em>', '&n': '<u>',
-        '&r': '</strong></em></u>'
-    };
-    
-    const colors = {
-        '&0': 'color-black',        '&1': 'color-dark-blue',
-        '&2': 'color-dark-green',   '&3': 'color-dark-aqua',
-        '&4': 'color-dark-red',     '&5': 'color-dark-purple',
-        '&6': 'color-gold',         '&7': 'color-gray',
-        '&8': 'color-dark-gray',    '&9': 'color-blue',
-        '&a': 'color-green',        '&b': 'color-aqua',
-        '&c': 'color-red',          '&d': 'color-pink',
-        '&e': 'color-yellow',       '&f': 'color-white'
-    };
-    
-    let html = text;
-    
-    Object.entries(colors).forEach(([code, className]) => {
-        const regex = new RegExp(code, 'g');
-        html = html.replace(regex, `<span class="${className}">`);
-    });
-    
-    Object.entries(formatting).forEach(([code, tag]) => {
-        const regex = new RegExp(code, 'g');
-        html = html.replace(regex, tag);
-    });
-    
-    html += '</span></strong></em></u>';
-    html = html.replace(/<\/span><\/strong><\/em><\/u>$/g, '');
-    
-    return html;
-}
-
-// Обновление предварительного просмотра
-function updatePreview() {
-    const title = document.getElementById('news-title')?.value || '';
-    const content = document.getElementById('news-content')?.value || '';
-    
-    const previewElement = document.getElementById('news-preview');
-    if (previewElement) {
-        const previewText = `${title}<br>${content}`;
-        previewElement.innerHTML = parseMinecraftColors(previewText);
-    }
-}
-
-// Рендеринг списков
-function renderAdminLists() {
-    renderNewsList();
-    renderPhotosList();
-    renderUpdatesList();
-}
-
-// Рендеринг списка новостей
-function renderNewsList() {
-    const container = document.getElementById('news-list');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <h3>Текущие новости (${data.news.length})</h3>
-        ${data.news.map((news, index) => {
-            // Удаляем теги для отображения в превью
-            const cleanContent = news.content.replace(/&[0-9a-fk-or]/gi, '');
-            return `
-                <div class="admin-item" data-id="${news.id}">
-                    <img src="${news.image}" alt="${news.title.replace(/&[0-9a-fk-or]/gi, '')}" 
-                         class="admin-thumb" loading="lazy">
-                    <div class="admin-item-content">
-                        <div class="admin-item-title minecraft-text">
-                            ${parseMinecraftColors(news.title)}
-                        </div>
-                        <div class="admin-item-preview">
-                            ${cleanContent.substring(0, 100)}${cleanContent.length > 100 ? '...' : ''}
-                        </div>
-                        <div class="admin-item-meta">
-                            <span><i class="fas fa-calendar"></i> ${news.date}</span>
-                            ${news.tags && news.tags.length ? `
-                                <span style="margin-left: 15px;">
-                                    <i class="fas fa-tags"></i> ${news.tags.join(', ')}
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>
-                    <div class="admin-item-actions">
-                        <button onclick="deleteNews(${index})" class="btn btn-danger btn-small">
-                            <i class="fas fa-trash"></i> Удалить
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('')}
-    `;
-}
-
-// Рендеринг списка фото
-function renderPhotosList() {
-    const container = document.getElementById('photos-list');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <h3>Текущие фото (${data.photos.length})</h3>
-        <div class="photos-grid">
-            ${data.photos.map((photo, index) => `
-                <div class="admin-photo-item">
-                    <img src="${photo.url}" alt="${photo.title}" 
-                         class="admin-photo" loading="lazy">
-                    <div class="admin-photo-info">
-                        <div class="admin-photo-title">${photo.title}</div>
-                        <button onclick="deletePhoto(${index})" 
-                                class="btn btn-danger btn-small">
-                            <i class="fas fa-trash"></i> Удалить
-                        </button>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-// Рендеринг списка обновлений
-function renderUpdatesList() {
-    const container = document.getElementById('updates-list');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <h3>Текущие обновления (${data.updates.length})</h3>
-        ${data.updates.map((update, index) => `
-            <div class="admin-item">
-                <div class="admin-item-content">
-                    <div class="admin-item-title">${update.title}</div>
-                    <p>${update.description}</p>
-                    <div class="admin-item-meta">
-                        <span><i class="fas fa-clock"></i> ${update.eta}</span>
-                        <span style="margin-left: 15px;">
-                            <i class="fas fa-chart-line"></i> Прогресс: ${update.progress || 0}%
-                        </span>
-                    </div>
-                </div>
-                <div class="admin-item-actions">
-                    <button onclick="deleteUpdate(${index})" 
-                            class="btn btn-danger btn-small">
-                        <i class="fas fa-trash"></i> Удалить
-                    </button>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | Сервер "Раевка"</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-user-shield"></i>
+                <div>
+                    <h1>Админ-панель Раевки</h1>
+                    <p class="logo-subtitle">Управление контентом сайта</p>
                 </div>
             </div>
-        `).join('')}
-    `;
-}
+            <nav class="nav">
+                <a href="index.html"><i class="fas fa-home"></i> На сайт</a>
+                <button class="admin-btn btn-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </button>
+            </nav>
+        </div>
+    </header>
 
-// Добавление новости
-document.getElementById('add-news-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const news = {
-        id: Date.now(),
-        title: document.getElementById('news-title').value,
-        content: document.getElementById('news-content').value,
-        image: document.getElementById('news-image').value,
-        date: document.getElementById('news-date').value,
-        tags: document.getElementById('news-tags').value
-            .split(',')
-            .map(tag => tag.trim())
-            .filter(tag => tag)
-    };
-    
-    data.news.unshift(news);
-    
-    if (saveData()) {
-        renderAdminLists();
-        this.reset();
-        updatePreview();
-        
-        // Устанавливаем сегодняшнюю дату по умолчанию
-        const dateInput = document.getElementById('news-date');
-        if (dateInput) {
-            const today = new Date().toISOString().split('T')[0];
-            dateInput.value = today;
+    <div class="container">
+        <div class="admin-panel">
+            <!-- Цветовые подсказки -->
+            <div class="color-guide">
+                <h3><i class="fas fa-palette"></i> Коды цветов Minecraft:</h3>
+                <div class="color-grid">
+                    <span class="color-badge" style="color: #55FF55">&a - Зеленый</span>
+                    <span class="color-badge" style="color: #FF5555">&c - Красный</span>
+                    <span class="color-badge" style="color: #FFFF55">&e - Желтый</span>
+                    <span class="color-badge" style="color: #5555FF">&9 - Синий</span>
+                    <span class="color-badge" style="color: #FF55FF">&d - Розовый</span>
+                    <span class="color-badge" style="color: #55FFFF">&b - Голубой</span>
+                    <span class="color-badge" style="color: #FFFFFF">&f - Белый</span>
+                    <span class="color-badge" style="color: #AAAAAA">&7 - Серый</span>
+                </div>
+                <div class="formatting-guide">
+                    <strong>Форматирование:</strong>
+                    <span>&l - <strong>Жирный</strong></span>
+                    <span>&o - <em>Курсив</em></span>
+                    <span>&n - <u>Подчеркнутый</u></span>
+                    <span>&r - Сброс форматирования</span>
+                </div>
+            </div>
+
+            <!-- Управление новостями -->
+            <section class="admin-section">
+                <h2><i class="fas fa-newspaper"></i> Управление новостями</h2>
+                
+                <div class="admin-form">
+                    <h3>Добавить новость</h3>
+                    <form id="add-news-form">
+                        <div class="form-group">
+                            <label for="news-title">Заголовок новости:</label>
+                            <input type="text" id="news-title" placeholder="Введите заголовок" required>
+                            <small>Используйте &код для цветного текста</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="news-content">Содержание:</label>
+                            <textarea id="news-content" placeholder="Введите текст новости" 
+                                      rows="6" required></textarea>
+                            <small>Пример: &cВажно! &eНовое обновление &aдоступно!</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="news-image">URL изображения:</label>
+                            <input type="url" id="news-image" 
+                                   placeholder="https://example.com/image.jpg" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="news-date">Дата публикации:</label>
+                                <input type="date" id="news-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="news-tags">Теги (через запятую):</label>
+                                <input type="text" id="news-tags" placeholder="Бизнес, Обновление, Важно">
+                            </div>
+                        </div>
+                        
+                        <div class="preview-box">
+                            <label>Предварительный просмотр:</label>
+                            <div class="color-preview" id="news-preview"></div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Добавить новость
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="admin-list" id="news-list">
+                    <!-- Список новостей загрузится через JS -->
+                </div>
+            </section>
+
+            <!-- Управление фото -->
+            <section class="admin-section">
+                <h2><i class="fas fa-images"></i> Управление фотогалереей</h2>
+                
+                <div class="admin-form">
+                    <h3>Добавить фото</h3>
+                    <form id="add-photo-form">
+                        <div class="form-group">
+                            <label for="photo-title">Название фото:</label>
+                            <input type="text" id="photo-title" placeholder="Введите название" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="photo-url">URL изображения:</label>
+                            <input type="url" id="photo-url" 
+                                   placeholder="https://example.com/photo.jpg" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Добавить фото
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="admin-list" id="photos-list">
+                    <!-- Список фото загрузится через JS -->
+                </div>
+            </section>
+
+            <!-- Управление обновлениями -->
+            <section class="admin-section">
+                <h2><i class="fas fa-sync-alt"></i> Управление обновлениями</h2>
+                
+                <div class="admin-form">
+                    <h3>Добавить обновление</h3>
+                    <form id="add-update-form">
+                        <div class="form-group">
+                            <label for="update-title">Название обновления:</label>
+                            <input type="text" id="update-title" 
+                                   placeholder="Введите название" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="update-desc">Описание:</label>
+                            <textarea id="update-desc" 
+                                      placeholder="Опишите обновление" 
+                                      rows="4" required></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="update-eta">Планируемая дата:</label>
+                                <input type="text" id="update-eta" 
+                                       placeholder="Апрель 2025" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="update-progress">Прогресс (%):</label>
+                                <input type="number" id="update-progress" 
+                                       min="0" max="100" value="0">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Добавить обновление
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="admin-list" id="updates-list">
+                    <!-- Список обновлений загрузится через JS -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+    <style>
+        .color-guide {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
         }
         
-        // Показываем уведомление
-        showNotification('Новость успешно добавлена!', 'success');
-    }
-});
-
-// Добавление фото
-document.getElementById('add-photo-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const photo = {
-        id: Date.now(),
-        title: document.getElementById('photo-title').value,
-        url: document.getElementById('photo-url').value
-    };
-    
-    data.photos.unshift(photo);
-    
-    if (saveData()) {
-        renderAdminLists();
-        this.reset();
-        showNotification('Фото успешно добавлено!', 'success');
-    }
-});
-
-// Добавление обновления
-document.getElementById('add-update-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const update = {
-        id: Date.now(),
-        title: document.getElementById('update-title').value,
-        description: document.getElementById('update-desc').value,
-        eta: document.getElementById('update-eta').value,
-        progress: parseInt(document.getElementById('update-progress').value) || 0
-    };
-    
-    data.updates.unshift(update);
-    
-    if (saveData()) {
-        renderAdminLists();
-        this.reset();
-        showNotification('Обновление успешно добавлено!', 'success');
-    }
-});
-
-// Удаление новости
-function deleteNews(index) {
-    if (confirm('Вы уверены, что хотите удалить эту новость?')) {
-        data.news.splice(index, 1);
-        if (saveData()) {
-            renderAdminLists();
-            showNotification('Новость удалена!', 'info');
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px;
+            margin: 15px 0;
         }
-    }
-}
-
-// Удаление фото
-function deletePhoto(index) {
-    if (confirm('Вы уверены, что хотите удалить это фото?')) {
-        data.photos.splice(index, 1);
-        if (saveData()) {
-            renderAdminLists();
-            showNotification('Фото удалено!', 'info');
+        
+        .color-badge {
+            background: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            border: 1px solid #ddd;
         }
-    }
-}
-
-// Удаление обновления
-function deleteUpdate(index) {
-    if (confirm('Вы уверены, что хотите удалить это обновление?')) {
-        data.updates.splice(index, 1);
-        if (saveData()) {
-            renderAdminLists();
-            showNotification('Обновление удалено!', 'info');
+        
+        .formatting-guide {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-    }
-}
-
-// Сохранение данных
-function saveData() {
-    try {
-        localStorage.setItem('serverData', JSON.stringify(data));
-        return true;
-    } catch (e) {
-        console.error('Ошибка сохранения данных:', e);
-        showNotification('Ошибка сохранения данных!', 'error');
-        return false;
-    }
-}
-
-// Выход из админ-панели
-function logout() {
-    localStorage.removeItem('adminLoggedIn');
-    window.location.href = 'index.html';
-}
-
-// Проверка авторизации
-function checkAuth() {
-    if (!localStorage.getItem('adminLoggedIn')) {
-        window.location.href = 'index.html';
-    }
-}
-
-// Отображение уведомлений
-function showNotification(message, type = 'info') {
-    // Создаём элемент уведомления
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-        ${message}
-    `;
-    
-    // Стили для уведомления
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#3498db'};
-        color: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: slideIn 0.3s ease;
-    `;
-    
-    // Анимация
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        
+        .formatting-guide span {
+            font-family: monospace;
+            padding: 4px 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-size: 0.85rem;
         }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
+        
+        .admin-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
         }
-    `;
-    document.head.appendChild(style);
-    
-    document.body.appendChild(notification);
-    
-    // Автоматическое удаление через 3 секунды
-    setTimeout(() => {
-        notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
-}
-
-// Слушатели для предварительного просмотра
-document.addEventListener('DOMContentLoaded', function() {
-    checkAuth();
-    renderAdminLists();
-    
-    // Обновление предварительного просмотра при вводе
-    const titleInput = document.getElementById('news-title');
-    const contentInput = document.getElementById('news-content');
-    
-    if (titleInput && contentInput) {
-        titleInput.addEventListener('input', updatePreview);
-        contentInput.addEventListener('input', updatePreview);
-    }
-    
-    // Устанавливаем сегодняшнюю дату по умолчанию для новости
-    const dateInput = document.getElementById('news-date');
-    if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.value = today;
-        dateInput.min = today;
-    }
-    
-    // Обновляем предварительный просмотр при загрузке
-    updatePreview();
-});
+        
+        .admin-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .preview-box {
+            margin: 15px 0;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border: 1px dashed #ddd;
+        }
+        
+        .color-preview {
+            min-height: 60px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 1px solid #e9ecef;
+            font-family: 'Minecraftia', monospace;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        
+        .admin-list h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            border-bottom: 2px solid #2ecc71;
+            padding-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .admin-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .admin-thumb {
+            width: 100px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        
+        .admin-item-content {
+            flex: 1;
+        }
+        
+        .admin-item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .admin-item-preview {
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .admin-item-meta {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+        
+        .admin-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .admin-photo-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+        
+        .admin-photo {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+        
+        .admin-photo-info {
+            padding: 12px;
+        }
+        
+        .admin-photo-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .admin-item-actions {
+                justify-content: center;
+            }
+            
+            .admin-thumb {
+                width: 100%;
+                height: 150px;
+            }
+        }
+    </style>
+</body>
+</html>
